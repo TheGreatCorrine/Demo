@@ -15,4 +15,4 @@
   shell: "systemctl restart {{ item }}"
   with_items: "{{ failed_services_list.stdout_lines }}"
   when: failed_services_output.stdout|int > 0 and restart_failed_services | bool
-  ignore_errors: yes 
+  ignore_errors: true 
