@@ -1,0 +1,18 @@
+---
+- name: Check if disk usage is critical
+  set_fact:
+    disk_critical: "{{ disk_usage.stdout|float > critical_disk_threshold }}"
+
+- name: Clean up old log files if disk usage is critical
+  shell: "find /var/log -type f -name '*.log.*' -mtime +7 -delete"
+  when: disk_critical
+
+- name: Clean package cache if disk usage is critical
+  shell: "apt-get clean"
+  when: disk_critical and ansible_os_family == 'Debian'
+
+- name: Restart failed services
+  shell: "systemctl restart {{ item }}"
+  with_items: "{{ failed_services_list.stdout_lines }}"
+  when: failed_services_output.stdout|int > 0 and restart_failed_services | bool
+  ignore_errors: yes 

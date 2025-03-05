@@ -1,0 +1,19 @@
+---
+- name: Create health report directory
+  file:
+    path: "{{ ansible_facts['env']['HOME'] }}/health_reports"
+    state: directory
+    mode: '0755'
+
+- name: Save current metrics to history file
+  copy:
+    content: |
+      {{ timestamp.stdout }},{{ cpu_usage.stdout|float|round(2) }},{{ memory_usage.stdout|float|round(2) }},{{ disk_usage.stdout }},{{ load_average.stdout|float|round(2) }}
+    dest: "{{ ansible_facts['env']['HOME'] }}/health_reports/metrics_history.csv"
+    mode: '0644'
+    
+- name: Create health report
+  template:
+    src: report.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/health_report.html"
+    mode: '0644' 

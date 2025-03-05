@@ -1,0 +1,13 @@
+---
+- name: Server Health Check Automation
+  hosts: servers
+  become: yes
+  gather_facts: yes
+  
+  roles:
+    - health_check
+    
+  post_tasks:
+    - name: Display report location
+      debug:
+        msg: "Health report generated at {{ ansible_facts['env']['HOME'] }}/health_report.html" 

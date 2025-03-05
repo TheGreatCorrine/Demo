@@ -1,0 +1,21 @@
+---
+- name: Send notification if issues detected
+  hosts: servers
+  gather_facts: no
+  
+  tasks:
+    - name: Check if health report exists
+      stat:
+        path: "{{ lookup('env', 'HOME') }}/health_report.html"
+      register: report_file
+      
+    - name: Read health report
+      shell: "grep -E 'warning|critical' {{ lookup('env', 'HOME') }}/health_report.html | wc -l"
+      register: issues_count
+      changed_when: false
+      when: report_file.stat.exists
+      
+    - name: Send email notification
+      debug:
+        msg: "这里可以添加发送邮件的模块，如mail模块或自定义脚本"
+      when: report_file.stat.exists and issues_count.stdout|int > 0 

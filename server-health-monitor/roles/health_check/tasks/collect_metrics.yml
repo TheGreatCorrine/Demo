@@ -1,0 +1,52 @@
+---
+- name: Get current timestamp
+  command: date "+%Y-%m-%d %H:%M:%S"
+  register: timestamp
+  changed_when: false
+
+- name: Check CPU usage
+  shell: "top -bn1 | grep 'Cpu(s)' | awk '{print $2 + $4}'"
+  register: cpu_usage
+  changed_when: false
+
+- name: Check memory usage
+  shell: "free -m | grep Mem | awk '{print $3/$2 * 100.0}'"
+  register: memory_usage
+  changed_when: false
+
+- name: Check disk usage
+  shell: "df -h / | tail -n 1 | awk '{print $5}' | cut -d'%' -f1"
+  register: disk_usage
+  changed_when: false
+
+- name: Get running processes count
+  shell: "ps aux | wc -l"
+  register: process_count
+  changed_when: false
+
+- name: Check system load average
+  shell: "uptime | awk -F'load average:' '{print $2}' | awk -F, '{print $1}' | tr -d ' '"
+  register: load_average
+  changed_when: false
+
+- name: Check for zombie processes
+  shell: "ps aux | grep -w Z | grep -v grep | wc -l"
+  register: zombie_processes
+  changed_when: false
+
+- name: Check network connections
+  shell: "netstat -an | grep ESTABLISHED | wc -l"
+  register: network_connections
+  changed_when: false
+
+- name: Check for failed services
+  shell: "systemctl list-units --state=failed --no-legend | wc -l"
+  register: failed_services
+  register: failed_services_output
+  changed_when: false
+
+- name: Get list of failed services
+  shell: "systemctl list-units --state=failed --no-legend | awk '{print $1}'"
+  register: failed_services_list
+  changed_when: false
+  when: failed_services_output.stdout|int > 0 

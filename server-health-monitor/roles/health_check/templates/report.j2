@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>服务器健康报告</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }
+        .dashboard { max-width: 900px; margin: 0 auto; background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .metric { margin-bottom: 20px; padding: 15px; border-radius: 5px; position: relative; }
+        .ok { background-color: #d4edda; border-left: 5px solid #28a745; }
+        .warning { background-color: #fff3cd; border-left: 5px solid #ffc107; }
+        .critical { background-color: #f8d7da; border-left: 5px solid #dc3545; }
+        h1 { color: #333; text-align: center; }
+        .metric-value { position: absolute; right: 20px; top: 15px; font-size: 24px; font-weight: bold; }
+        .summary { display: flex; justify-content: space-between; margin-bottom: 30px; }
+        .summary-item { text-align: center; padding: 10px; flex: 1; }
+        .chart-container { height: 200px; margin: 20px 0; background-color: #f9f9f9; border-radius: 5px; padding: 10px; }
+        .bar { height: 30px; background-color: #4CAF50; margin: 5px 0; border-radius: 3px; }
+        .remediation { background-color: #e7f3fe; padding: 15px; border-radius: 5px; margin-top: 20px; border-left: 5px solid #2196F3; }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>服务器健康报告</h1>
+        <p>生成时间: {{ timestamp.stdout }}</p>
+        <p>主机名: {{ ansible_hostname }}</p>
+        
+        <div class="summary">
+            <div class="summary-item">
+                <h3>CPU</h3>
+                <p>{{ cpu_usage.stdout|float|round(2) }}%</p>
+            </div>
+            <div class="summary-item">
+                <h3>内存</h3>
+                <p>{{ memory_usage.stdout|float|round(2) }}%</p>
+            </div>
+            <div class="summary-item">
+                <h3>磁盘</h3>
+                <p>{{ disk_usage.stdout }}%</p>
+            </div>
+            <div class="summary-item">
+                <h3>负载</h3>
+                <p>{{ load_average.stdout }}</p>
+            </div>
+        </div>
+        
+        <div class="metric {% if cpu_usage.stdout|float < warning_cpu_threshold %}ok{% elif cpu_usage.stdout|float < critical_cpu_threshold %}warning{% else %}critical{% endif %}">
+            <h3>CPU 使用率</h3>
+            <div class="metric-value">{{ cpu_usage.stdout|float|round(2) }}%</div>
+            <p>状态: {% if cpu_usage.stdout|float < warning_cpu_threshold %}正常{% elif cpu_usage.stdout|float < critical_cpu_threshold %}警告{% else %}严重{% endif %}</p>
+            <div class="chart-container">
+                <div class="bar" style="width: {{ cpu_usage.stdout|float }}%;"></div>
+            </div>
+        </div>
+        
+        <div class="metric {% if memory_usage.stdout|float < warning_memory_threshold %}ok{% elif memory_usage.stdout|float < critical_memory_threshold %}warning{% else %}critical{% endif %}">
+            <h3>内存使用率</h3>
+            <div class="metric-value">{{ memory_usage.stdout|float|round(2) }}%</div>
+            <p>状态: {% if memory_usage.stdout|float < warning_memory_threshold %}正常{% elif memory_usage.stdout|float < critical_memory_threshold %}警告{% else %}严重{% endif %}</p>
+            <div class="chart-container">
+                <div class="bar" style="width: {{ memory_usage.stdout|float }}%;"></div>
+            </div>
+        </div>
+        
+        <div class="metric {% if disk_usage.stdout|float < warning_disk_threshold %}ok{% elif disk_usage.stdout|float < critical_disk_threshold %}warning{% else %}critical{% endif %}">
+            <h3>磁盘使用率</h3>
+            <div class="metric-value">{{ disk_usage.stdout }}%</div>
+            <p>状态: {% if disk_usage.stdout|float < warning_disk_threshold %}正常{% elif disk_usage.stdout|float < critical_disk_threshold %}警告{% else %}严重{% endif %}</p>
+            <div class="chart-container">
+                <div class="bar" style="width: {{ disk_usage.stdout }}%;"></div>
+            </div>
+        </div>
+        
+        <div class="metric {% if load_average.stdout|float < warning_load_threshold %}ok{% elif load_average.stdout|float < critical_load_threshold %}warning{% else %}critical{% endif %}">
+            <h3>系统负载</h3>
+            <div class="metric-value">{{ load_average.stdout }}</div>
+            <p>状态: {% if load_average.stdout|float < warning_load_threshold %}正常{% elif load_average.stdout|float < critical_load_threshold %}警告{% else %}严重{% endif %}</p>
+        </div>
+        
+        <div class="metric ok">
+            <h3>运行进程数</h3>
+            <div class="metric-value">{{ process_count.stdout }}</div>
+        </div>
+        
+        <div class="metric {% if zombie_processes.stdout|int > 0 %}warning{% else %}ok{% endif %}">
+            <h3>僵尸进程数</h3>
+            <div class="metric-value">{{ zombie_processes.stdout }}</div>
+            <p>状态: {% if zombie_processes.stdout|int > 0 %}需要注意{% else %}正常{% endif %}</p>
+        </div>
+        
+        <div class="metric ok">
+            <h3>网络连接数</h3>
+            <div class="metric-value">{{ network_connections.stdout }}</div>
+        </div>
+        
+        <div class="metric {% if failed_services.stdout|int > 0 %}critical{% else %}ok{% endif %}">
+            <h3>失败的服务</h3>
+            <div class="metric-value">{{ failed_services.stdout }}</div>
+            {% if failed_services.stdout|int > 0 %}
+            <p>失败的服务列表:</p>
+            <ul>
+                {% for service in failed_services_list.stdout_lines %}
+                <li>{{ service }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        
+        {% if disk_critical or failed_services.stdout|int > 0 %}
+        <div class="remediation">
+            <h3>自动修复操作</h3>
+            <ul>
+                {% if disk_critical %}
+                <li>清理了旧日志文件</li>
+                {% if ansible_os_family == 'Debian' %}
+                <li>清理了软件包缓存</li>
+                {% endif %}
+                {% endif %}
+                
+                {% if failed_services.stdout|int > 0 and restart_failed_services %}
+                <li>尝试重启失败的服务</li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html> 

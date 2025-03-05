@@ -1,0 +1,13 @@
+---
+- name: Include variables
+  include_vars: main.yml
+
+- name: Include metrics collection tasks
+  include_tasks: collect_metrics.yml
+
+- name: Check for issues that need remediation
+  include_tasks: remediation.yml
+  when: enable_auto_remediation | bool
+
+- name: Generate health report
+  include_tasks: generate_report.yml 
