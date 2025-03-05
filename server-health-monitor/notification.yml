@@ -17,5 +17,5 @@
       
     - name: Send email notification
       debug:
-        msg: "这里可以添加发送邮件的模块，如mail模块或自定义脚本"
+        msg: "You can add email module here, such as mail module or custom script"
       when: report_file.stat.exists and issues_count.stdout|int > 0 

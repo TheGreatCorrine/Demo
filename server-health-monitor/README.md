@@ -1,19 +1,19 @@
-# 服务器健康监控自动化工具
+# Server Health Monitoring Automation Tool
 
-自动化服务器健康检查工具，使用Ansible实现。
+Automated server health check tool implemented with Ansible.
 
-## 功能
-- 监控CPU使用率
-- 监控内存使用率
-- 监控磁盘使用率
-- 监控系统负载
-- 检查僵尸进程
-- 检查网络连接
-- 检查失败的服务
-- 自动修复常见问题
-- 生成HTML格式报告
-- 支持邮件通知
+## Features
+- Monitor CPU usage
+- Monitor memory usage
+- Monitor disk usage
+- Monitor system load
+- Check zombie processes
+- Check network connections
+- Check failed services
+- Automatically fix common issues
+- Generate HTML format reports
+- Support email notifications
 
-## 使用方法
+## Usage
 
-### 基本健康检查 
+### Basic Health Check 

@@ -1,5 +1,5 @@
 ---
-# 阈值设置
+# Threshold settings
 warning_cpu_threshold: 70
 critical_cpu_threshold: 90
 
@@ -12,6 +12,6 @@ critical_disk_threshold: 90
 warning_load_threshold: 2
 critical_load_threshold: 4
 
-# 自动修复设置
+# Auto-remediation settings
 enable_auto_remediation: true
 restart_failed_services: true 
