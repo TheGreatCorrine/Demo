@@ -41,7 +41,6 @@
 
 - name: Check for failed services
   shell: "systemctl list-units --state=failed --no-legend | wc -l"
-  register: failed_services
   register: failed_services_output
   changed_when: false
 
